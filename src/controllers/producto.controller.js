@@ -15,7 +15,9 @@ function manejarValidacion(req) {
 async function crearProducto(req, res, next) {
   try {
     manejarValidacion(req);
-    const { nombre, precio, descripcion, imagen } = req.body;
+    const { nombre, precio, descripcion } = req.body;
+
+    const imagen = req.file ? req.file.filename : "sin-imagen.png";
 
     const nuevoProducto = await Producto.create({
       nombre,
@@ -23,6 +25,7 @@ async function crearProducto(req, res, next) {
       descripcion,
       imagen,
     });
+
     res.status(201).json({
       ok: true,
       mensaje: "Producto creado correctamente",
@@ -56,7 +59,7 @@ async function obtenerProducto(req, res, next) {
     if (!producto) {
       return res
         .status(404)
-        .json({ ok: false, message: "Producto no encontrado" });
+        .json({ ok: false, mensaje: "Producto no encontrado" });
     }
 
     res.json({ ok: true, data: producto });
@@ -70,13 +73,18 @@ async function actualizarProducto(req, res, next) {
   try {
     manejarValidacion(req);
     const { id } = req.params;
-    const { nombre, precio, descripcion, imagen } = req.body;
+    const { nombre, precio, descripcion } = req.body;
 
-    const productoActualizado  = await Producto.findByIdAndUpdate(
-      id,
-      { nombre, precio, descripcion, imagen },
-      { new: true, runValidators: true }
-    );
+    const cambios = { nombre, precio, descripcion };
+
+    if (req.file) {
+      cambios.imagen = req.file.filename;
+    }
+
+    const productoActualizado = await Producto.findByIdAndUpdate(id, cambios, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!productoActualizado) {
       return res
@@ -98,7 +106,7 @@ async function actualizarProducto(req, res, next) {
 async function eliminarProducto(req, res, next) {
   try {
     const { id } = req.params;
-    const productoEliminado  = await Producto.findByIdAndDelete(id);
+    const productoEliminado = await Producto.findByIdAndDelete(id);
 
     if (!productoEliminado) {
       return res
@@ -106,7 +114,7 @@ async function eliminarProducto(req, res, next) {
         .json({ ok: false, message: "Producto no encontrado" });
     }
 
-    res.json({ ok: true, message: "Producto eliminado" });
+    res.json({ ok: true, message: "Producto eliminado correctamente" });
   } catch (err) {
     next(err);
   }

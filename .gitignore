@@ -7,3 +7,4 @@ node_modules/
 #Subidas
 uploads/
 
+SESSION_SECRET=miinventario_secret
