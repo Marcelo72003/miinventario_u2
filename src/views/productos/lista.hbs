@@ -1,0 +1,36 @@
+<section>
+  <div class="header-row">
+    <h1>Productos</h1>
+    <a href="/productos/nuevo" class="btn">+ Nuevo producto</a>
+  </div>
+
+  {{#if productos.length}}
+    <div class="grid">
+      {{#each productos}}
+        <article class="card producto">
+          <div class="producto-img-wrap">
+            {{#if imagen}}
+              <img src="/uploads/{{imagen}}" alt="{{nombre}}" />
+            {{else}}
+              <div class="placeholder-img">Sin imagen</div>
+            {{/if}}
+          </div>
+
+          <div class="producto-body">
+            <h2>{{nombre}}</h2>
+            <p class="precio">$ {{precio}}</p>
+            {{#if descripcion}}
+              <p class="descripcion">{{descripcion}}</p>
+            {{/if}}
+          </div>
+
+          <div class="producto-actions">
+            <a href="/productos/{{_id}}/editar">Editar</a>
+          </div>
+        </article>
+      {{/each}}
+    </div>
+  {{else}}
+    <p>No hay productos registrados aún.</p>
+  {{/if}}
+</section>

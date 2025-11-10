@@ -1,5 +1,5 @@
 const express = require("express");
-const { body, param } = require("express-validator");
+const { param } = require("express-validator");
 const {
   crearProducto,
   listarProductos,
@@ -8,47 +8,57 @@ const {
   eliminarProducto,
 } = require("../controllers/producto.controller");
 const uploadProducto = require("../middlewares/uploadProducto");
+const {
+  validarCrearProducto,
+  validarActualizarProducto,
+} = require("../validators/producto.validators");
 
 const router = express.Router();
 
-// Validaciones para crear producto
-const validacionesCrear = [
-  body("nombre")
-    .notEmpty()
-    .withMessage("El nombre es obligatorio")
-    .isLength({ min: 2, max: 100 })
-    .withMessage("El nombre debe tener entre 2 y 100 caracteres"),
-  body("precio")
-    .notEmpty()
-    .withMessage("El precio es obligatorio")
-    .isFloat({ min: 0 })
-    .withMessage("El precio debe ser mayor o igual a 0"),
-  body("descripcion")
-    .optional().isLength({ max: 500 })
-    .withMessage("La descripcion no puede superar los 500 caracteres"),
+// Validacion del ID de Mongo
+const validarId = [
+  param("id").isMongoId().withMessage("ID invalido"),
 ];
 
-// Validaciones para actualizar un producto
-const validacionesActualizar = [
-  body("nombre").optional().isLength({ min: 2, max: 100 }),
-  body("precio").optional().isFloat({ min: 0 }),
-  body("descripcion").optional().isLength({ max: 500 }),
-];
+// Crear producto (con imagen y validaciones)
+router.post(
+  "/",
+  uploadProducto,
+  validarCrearProducto,
+  crearProducto
+);
 
-// Validacion del parámetro ID
-const validarId = [param("id").isMongoId().withMessage("ID invalido")];
-
-// CRUD
-router.post("/", uploadProducto, validacionesCrear, crearProducto);
+// Listar todos
 router.get("/", listarProductos);
-router.get("/:id", validarId, obtenerProducto);
+
+// Actualizar producto
 router.put(
   "/:id",
   uploadProducto,
-  validarId,
-  ...validacionesActualizar,
+  [...validarId, ...validarActualizarProducto],
   actualizarProducto
 );
-router.delete("/:id", validarId, eliminarProducto);
+
+// Actualizar producto (FORM HTML - POST)
+router.post(
+  "/:id",
+  uploadProducto,
+  [...validarId, ...validarActualizarProducto],
+  actualizarProducto
+);
+
+// Obtener uno por ID
+router.get(
+  "/:id",
+  validarId,
+  obtenerProducto
+);
+
+// Eliminar producto
+router.delete(
+  "/:id",
+  validarId,
+  eliminarProducto
+);
 
 module.exports = router;

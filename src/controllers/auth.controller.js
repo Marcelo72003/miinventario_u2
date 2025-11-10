@@ -15,15 +15,43 @@ function manejarValidacion(req) {
 //POST auth/registro
 async function registrarUsuario(req, res, next) {
   try {
-    manejarValidacion(req);
+    const errors = validationResult(req);
+    const isForm =
+      (req.headers["content-type"] || "").includes(
+        "application/x-www-form-urlencoded"
+      ) ||
+      (req.headers["content-type"] || "").includes("multipart/form-data");
+
+    if (!errors.isEmpty()) {
+      if (isForm) {
+        // Volver al formulario con el primer error
+        return res.status(400).render("auth/registro", {
+          titulo: "Crear cuenta",
+          error: errors.array()[0].msg,
+          old: req.body,
+        });
+      }
+      return res.status(400).json({
+        ok: false,
+        mensaje: "Datos inválidos",
+        errores: errors.array(),
+      });
+    }
 
     const { nombre, email, password, rol } = req.body;
 
     const existe = await Usuario.findOne({ email });
     if (existe) {
+      if (isForm) {
+        return res.status(400).render("auth/registro", {
+          titulo: "Crear cuenta",
+          error: "El correo ya está registrado",
+          old: req.body,
+        });
+      }
       return res
         .status(400)
-        .json({ ok: false, mensaje: "El correo ya esta registrado" });
+        .json({ ok: false, mensaje: "El correo ya está registrado" });
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -35,18 +63,23 @@ async function registrarUsuario(req, res, next) {
       rol: rol === "admin" ? "admin" : "usuario",
     });
 
-    //Guardar datos minimos en sesion
-    req.session.usuario = {
-      id: usuario._id,
-      nombre: usuario.nombre,
-      email: usuario.email,
-      rol: usuario.rol,
-    };
+    //Formulario HTML: mensaje + redirección a login
+    if (isForm) {
+      req.session.mensajeExito =
+        "Usuario registrado correctamente. Ahora puedes iniciar sesión.";
+      return res.redirect("/login");
+    }
 
-    res.status(201).json({
+    //Postman / API: devolver JSON
+    return res.status(201).json({
       ok: true,
-      mensaje: "Usuario registrado y sesion iniciada",
-      usuario: req.session.usuario,
+      mensaje: "Usuario registrado correctamente",
+      usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol,
+      },
     });
   } catch (err) {
     next(err);
@@ -56,24 +89,18 @@ async function registrarUsuario(req, res, next) {
 // POST /auth/login
 async function login(req, res, next) {
   try {
-    manejarValidacion(req);
-
     const { email, password } = req.body;
-
     const usuario = await Usuario.findOne({ email });
-    if (!usuario) {
-      return res
-        .status(400)
-        .json({ ok: false, mensaje: "Credenciales incorrectas" });
+
+    // Usuario no encontrado o contraseña incorrecta
+    if (!usuario || !(await bcrypt.compare(password, usuario.password))) {
+      return res.render("auth/login", {
+        titulo: "Iniciar sesión",
+        error: "⚠️ Credenciales incorrectas. Inténtalo de nuevo.",
+      });
     }
 
-    const esValida = await bcrypt.compare(password, usuario.password);
-    if (!esValida) {
-      return res
-        .status(400)
-        .json({ ok: false, mensaje: "Credenciales incorrectas" });
-    }
-
+    // Guardar sesion
     req.session.usuario = {
       id: usuario._id,
       nombre: usuario.nombre,
@@ -81,11 +108,7 @@ async function login(req, res, next) {
       rol: usuario.rol,
     };
 
-    res.json({
-      ok: true,
-      mensaje: "Login exitoso",
-      usuario: req.session.usuario,
-    });
+    return res.redirect("/productos");
   } catch (err) {
     next(err);
   }
@@ -94,21 +117,21 @@ async function login(req, res, next) {
 // POST /auth/logout
 function logout(req, res, next) {
   try {
-    if (!req.session.usuario) {
-      return res.status(400).json({ ok: false, mensaje: "No hay sesion activa" });
+    if (!req.session || !req.session.usuario) {
+      // Si no hay sesión igual se va al al login
+      return res.redirect("/login");
     }
 
     req.session.destroy((err) => {
-      if (err) {
-        return next(err);
-      }
+      if (err) return next(err);
       res.clearCookie("connect.sid");
-      res.json({ ok: true, mensaje: "Sesion cerrada correctamente" });
+      return res.redirect("/login");
     });
   } catch (err) {
     next(err);
   }
 }
+
 
 // GET /auth/perfil
 function perfil(req, res) {

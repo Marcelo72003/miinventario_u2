@@ -14,13 +14,13 @@ const storage = multer.diskStorage({
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9\-]/g, "");
 
-    const nombreFinal = `${Data.now()}-${nombreLimpio || "producto"}${ext}`;
+    const nombreFinal = `${Date.now()}-${nombreLimpio || "producto"}${ext}`;
     cb(null, nombreFinal);
   },
 });
 
 //Formatos permitidos
-const tiposPermitidos = ["image/jpeg", "image/png", "image/jpg", "image/web"];
+const tiposPermitidos = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
 function fileFilter(req, file, cb) {
   if (tiposPermitidos.includes(file.mimetype)) {

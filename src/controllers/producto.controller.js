@@ -15,8 +15,8 @@ function manejarValidacion(req) {
 async function crearProducto(req, res, next) {
   try {
     manejarValidacion(req);
-    const { nombre, precio, descripcion } = req.body;
 
+    const { nombre, precio, descripcion } = req.body;
     const imagen = req.file ? req.file.filename : "sin-imagen.png";
 
     const nuevoProducto = await Producto.create({
@@ -25,6 +25,15 @@ async function crearProducto(req, res, next) {
       descripcion,
       imagen,
     });
+
+    // Si viene desde formulario HTML, redirigimos a la vista
+    const contentType = req.headers["content-type"] || "";
+    if (
+      contentType.includes("application/x-www-form-urlencoded") ||
+      contentType.includes("multipart/form-data")
+    ) {
+      return res.redirect("/productos");
+    }
 
     res.status(201).json({
       ok: true,
@@ -40,6 +49,7 @@ async function crearProducto(req, res, next) {
 async function listarProductos(req, res, next) {
   try {
     const productos = await Producto.find().sort({ createdAt: -1 });
+
     res.json({
       ok: true,
       total: productos.length,
@@ -72,14 +82,16 @@ async function obtenerProducto(req, res, next) {
 async function actualizarProducto(req, res, next) {
   try {
     manejarValidacion(req);
+
     const { id } = req.params;
     const { nombre, precio, descripcion } = req.body;
 
-    const cambios = { nombre, precio, descripcion };
+    const cambios = {};
 
-    if (req.file) {
-      cambios.imagen = req.file.filename;
-    }
+    if (typeof nombre !== "undefined") cambios.nombre = nombre;
+    if (typeof precio !== "undefined") cambios.precio = precio;
+    if (typeof descripcion !== "undefined") cambios.descripcion = descripcion;
+    if (req.file) cambios.imagen = req.file.filename;
 
     const productoActualizado = await Producto.findByIdAndUpdate(id, cambios, {
       new: true,
@@ -87,12 +99,23 @@ async function actualizarProducto(req, res, next) {
     });
 
     if (!productoActualizado) {
-      return res
-        .status(404)
-        .json({ ok: false, message: "Producto no encontrado" });
+      return res.status(404).json({
+        ok: false,
+        mensaje: "Producto no encontrado",
+      });
     }
 
-    res.json({
+    // Detecta si viene desde formulario -> redirigir
+    const contentType = req.headers["content-type"] || "";
+    if (
+      contentType.includes("multipart/form-data") ||
+      contentType.includes("application/x-www-form-urlencoded")
+    ) {
+      return res.redirect("/productos");
+    }
+
+    // Si viene desde una API -> responder JSON
+    return res.json({
       ok: true,
       mensaje: "Producto actualizado correctamente",
       data: productoActualizado,

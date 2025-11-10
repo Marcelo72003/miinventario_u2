@@ -1,0 +1,21 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <a href="/productos">MiInventarioExpress</a>
+  </div>
+
+  <div class="navbar-right">
+    {{#if usuario}}
+      <a href="/productos">Productos</a>
+      <a href="/productos/nuevo">Nuevo producto</a>
+      <a href="/chat">Chat</a>
+      <span>Hola, {{usuario.nombre}} ({{usuario.rol}})</span>
+
+      <form action="/api/auth/logout" method="POST" class="navbar-form">
+        <button type="submit">Cerrar sesión</button>
+      </form>
+    {{else}}
+      <a href="/login">Iniciar sesión</a>
+      <a href="/registro">Registrarse</a>
+    {{/if}}
+  </div>
+</nav>

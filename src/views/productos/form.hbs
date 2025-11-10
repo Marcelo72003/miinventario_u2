@@ -1,0 +1,58 @@
+<section>
+  <h1>{{titulo}}</h1>
+
+  <form
+    action="{{accion}}"
+    method="POST"
+    enctype="multipart/form-data"
+    class="card form"
+  >
+    <div class="form-group">
+      <label for="nombre">Nombre</label>
+      <input
+        type="text"
+        id="nombre"
+        name="nombre"
+        required
+        value="{{#if producto}}{{producto.nombre}}{{/if}}"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="precio">Precio</label>
+      <input
+        type="number"
+        step="0.01"
+        id="precio"
+        name="precio"
+        required
+        value="{{#if producto}}{{producto.precio}}{{/if}}"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="descripcion">Descripción</label>
+      <textarea
+        id="descripcion"
+        name="descripcion"
+        rows="3"
+      >{{#if producto}}{{producto.descripcion}}{{/if}}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="imagen">Imagen</label>
+      <input type="file" id="imagen" name="imagen" />
+
+      {{#if producto.imagen}}
+        <p class="hint">Imagen actual:</p>
+        <img
+          src="/uploads/{{producto.imagen}}"
+          alt="{{producto.nombre}}"
+          class="preview-img"
+        />
+      {{/if}}
+    </div>
+
+    <button type="submit">{{botonTexto}}</button>
+  </form>
+</section>

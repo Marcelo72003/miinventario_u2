@@ -1,15 +1,19 @@
 function requiereAuth(req, res, next) {
-  if (!req.session || !req.session.usuario) {
-    return res.status(401).json({ ok: false, mensaje: "No autorizado" });
+  if (req.session && req.session.usuario) {
+    return next();
   }
-  next();
+  return res.redirect("/login");
 }
 
-function requiereAdmin(req, res, next) {
-  if (!req.session || !req.session.usuario || req.session.usuario.rol !== "admin") {
-    return res.status(403).json({ ok: false, mensaje: "Solo administradores" });
+// Middleware para rutas solo para invitados, no logueados
+function requiereInvitado(req, res, next) {
+  if (req.session && req.session.usuario) {
+    return res.redirect("/productos");
   }
-  next();
+  return next();
 }
 
-module.exports = { requiereAuth, requiereAdmin };
+module.exports = {
+  requiereAuth,
+  requiereInvitado,
+};
