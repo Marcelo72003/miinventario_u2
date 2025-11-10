@@ -9,6 +9,10 @@
 - **Unidad:** 2
 - **Fecha:** 09/11/2025
 
+### 1. Clonar el repositorio
+
+git clone https://github.com/Marcelo72003/miinventario_u2.git
+
 ---
 
 ## Descripción general
@@ -95,20 +99,7 @@ MiInventarioExpress/
 
 ## Instalación y configuración
 
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/tuusuario/MiInventarioExpress.git
-cd MiInventarioExpress
-```
-
-### 2. Instalar dependencias
-
-```bash
-npm install
-```
-
-### 3. Configurar las variables de entorno
+### Configurar las variables de entorno
 
 Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
 
